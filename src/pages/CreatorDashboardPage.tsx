@@ -41,6 +41,7 @@ import { useUpdateCreatorProfile } from '@/hooks/useUpdateCreatorProfile';
 
 import { GraduatedCurveMilestoneChart } from '@/components/common/GraduatedCurveMilestoneChart';
 import CreatorRevenuePanel from '@/components/common/CreatorRevenuePanel';
+import CreatorAnnouncementsPanel from '@/components/common/CreatorAnnouncementsPanel';
 
 const TABS = [
 	{ label: 'Overview', value: 'overview' },
@@ -184,6 +185,14 @@ export default function CreatorDashboardPage() {
 						>
 							Revenue & withdrawals
 						</Link>
+
+						<Link
+							to={`/creator/${id}/spotlight`}
+							className="inline-flex items-center gap-1.5 text-sm font-semibold text-sky-300 underline-offset-4 hover:text-sky-200 hover:underline"
+							data-testid="creator-dashboard-spotlight-link"
+						>
+							Spotlight auction
+						</Link>
 					</div>
 				</div>
 
@@ -269,6 +278,25 @@ export default function CreatorDashboardPage() {
 							currentSupply={creator.creatorShareSupply ?? 100}
 						/>
 					</div>
+				)}
+
+				{activeTab === 'overview' && (
+					<section
+						className={CARD_CLASS}
+						aria-labelledby="dashboard-announcements-heading"
+						data-testid="dashboard-announcements-section"
+					>
+						<h2
+							id="dashboard-announcements-heading"
+							className="mb-1 font-grotesque text-xl font-black tracking-tight"
+						>
+							Announcements
+						</h2>
+						<p className="mb-6 text-sm text-white/50">
+							Post updates to your key holders.
+						</p>
+						<CreatorAnnouncementsPanel creatorId={id} />
+					</section>
 				)}
 
 				{activeTab === 'revenue' && (

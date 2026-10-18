@@ -24,6 +24,7 @@ import StakingDashboardPage from './pages/StakingDashboardPage';
 import RevenueDistributionHistoryPage from './pages/RevenueDistributionHistoryPage';
 import BundleManagementPage from './pages/BundleManagementPage';
 import CreatorRevenueDashboardPage from './pages/CreatorRevenueDashboardPage';
+import SpotlightAuctionPage from './pages/SpotlightAuctionPage';
 import AtomicSwapCreatePage from './pages/AtomicSwapCreatePage';
 import AtomicSwapProposalPage from './pages/AtomicSwapProposalPage';
 import StatusPage from './pages/StatusPage';
@@ -129,6 +130,14 @@ export const routes = [
 			{
 				path: '/creators/:id/bundles',
 				element: <BundleManagementPage />,
+			},
+			{
+				path: '/creator/:id/spotlight',
+				element: <SpotlightAuctionPage />,
+			},
+			{
+				path: '/creators/:id/spotlight',
+				element: <SpotlightAuctionPage />,
 			},
 			{
 				path: '/creator/:id/revenue',

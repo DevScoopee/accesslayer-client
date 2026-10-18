@@ -38,6 +38,14 @@ export const queryKeys = {
 		stats: (creatorId: string) => ['creators', creatorId, 'stats'] as const,
 		auctionBids: (creatorId: string) =>
 			['creators', creatorId, 'auction-bids'] as const,
+		tradeLimits: (creatorId: string) =>
+			['creators', creatorId, 'trade-limits'] as const,
+		spotlightAuction: (creatorId: string) =>
+			['creators', creatorId, 'spotlight-auction'] as const,
+		spotlightBids: (creatorId: string) =>
+			['creators', creatorId, 'spotlight-bids'] as const,
+		announcements: (creatorId: string) =>
+			['creators', creatorId, 'announcements'] as const,
 		uniqueTraders: (creatorId: string) =>
 			['creators', creatorId, 'unique-traders'] as const,
 		curveConfig: (creatorId: string) =>

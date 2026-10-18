@@ -1125,7 +1125,10 @@ const TradeDialog: React.FC<TradeDialogProps> = ({
 			>
 				Cancel
 			</Button>
-			<UnavailableAction disabled={paused} reason="Trading is currently paused">
+			<UnavailableAction
+				disabled={paused}
+				reason={globalPaused ? 'Platform Paused' : 'Trading is currently paused'}
+			>
 				<Button
 					type="button"
 					onClick={handleConfirm}

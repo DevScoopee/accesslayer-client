@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useWalletHoldings } from '@/hooks/useWallet';
 import { useProfileStore } from '@/hooks/useProfileStore';
 import { Button } from '@/components/ui/button';
@@ -19,6 +19,7 @@ export default function SubscriptionAccessGate({
 }: SubscriptionAccessGateProps) {
 	const profile = useProfileStore(state => state.profile);
 	const userAddress = profile?.id;
+	const [durationDays, setDurationDays] = useState(30);
 	const { data: holdings = [], isLoading } = useWalletHoldings(
 		userAddress ?? ''
 	);
@@ -77,11 +78,26 @@ export default function SubscriptionAccessGate({
 					You need at least {minimumHolding} key{minimumHolding === 1 ? '' : 's'}{' '}
 					to access this creator's gated content. You currently hold {quantity}.
 				</p>
-				{onBuyClick && (
-					<Button onClick={onBuyClick} variant="default" className="font-bold">
-						Buy Keys to Unlock
-					</Button>
-				)}
+				                {onBuyClick && (
+                    <>
+                        <div className="mb-3 flex items-center justify-center gap-3 text-sm text-white/70">
+                            <label htmlFor="subscription-duration">Duration</label>
+                            <select
+                                id="subscription-duration"
+                                value={durationDays}
+                                onChange={event => setDurationDays(Number(event.target.value))}
+                                className="rounded border border-white/10 bg-slate-900 px-2 py-1 text-white"
+                            >
+                                <option value={7}>7 days</option>
+                                <option value={30}>30 days</option>
+                                <option value={90}>90 days</option>
+                            </select>
+                        </div>
+                        <Button onClick={onBuyClick} variant="default" className="font-bold">
+                            Subscribe for {durationDays} days
+                        </Button>
+                    </>
+                )}
 			</div>
 		);
 	}

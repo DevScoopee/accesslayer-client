@@ -32,7 +32,10 @@ import HolderLeaderboardPage from './pages/HolderLeaderboardPage';
 import BundlesPage from './pages/BundlesPage';
 import BundleDetailPage from './pages/BundleDetailPage';
 import SearchResultsPage from './pages/SearchResultsPage';
+import KeyDiscoveryFeedPage from './pages/KeyDiscoveryFeedPage';
+import WalletPortfolioPage from './pages/WalletPortfolioPage';
 import AutoInvestDashboardPage from './pages/AutoInvestDashboardPage';
+import AirdropClaimsPage from './pages/AirdropClaimsPage';
 import RouteErrorBoundary from './components/common/RouteErrorBoundary';
 
 function withRouteErrorBoundary(element: ReactNode, routeName: string) {
@@ -73,6 +76,11 @@ export const routes = [
 			{
 				path: '/discover',
 				element: <DiscoveryPage />,
+			},
+			{
+				// Key discovery feed with sort + category filters (#1113).
+				path: '/discovery/feed',
+				element: <KeyDiscoveryFeedPage />,
 			},
 			{
 				path: '/leaderboard',
@@ -172,6 +180,14 @@ export const routes = [
 				element: withRouteErrorBoundary(<ProfilePage />, 'Portfolio'),
 			},
 			{
+				// Wallet portfolio table with holdings + PnL breakdown (#1116).
+				path: '/portfolio',
+				element: withRouteErrorBoundary(
+					<WalletPortfolioPage />,
+					'Wallet portfolio'
+				),
+			},
+			{
 				path: '/following',
 				element: <FollowingPage />,
 			},
@@ -202,6 +218,14 @@ export const routes = [
 			{
 				path: '/auto-invest',
 				element: <AutoInvestDashboardPage />,
+			},
+			{
+				// Airdrop claims page for key holders.
+				path: '/airdrop-claims',
+				element: withRouteErrorBoundary(
+					<AirdropClaimsPage />,
+					'Airdrop claims'
+				),
 			},
 			{
 				path: '/swap/create',

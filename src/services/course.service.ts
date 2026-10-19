@@ -73,6 +73,12 @@ export interface Course {
 	auctionHighestBid?: number;
 	/** Pre-launch auction bid history, newest first (#924). */
 	auctionBids?: AuctionBidEntry[];
+	/** Final clearing price for settled auction in XLM (#1164). */
+	auctionClearingPrice?: number;
+	/** Number of keys allocated in the auction settlement (#1164). */
+	auctionAllocation?: number;
+	/** Whether the auction has been settled on-chain (#1164). */
+	auctionSettled?: boolean;
 	/**
 	 * Early-sell penalty in basis points (0–2000 = 0%–20%).
 	 * Applied to sells within the first 7 days after key creation.
@@ -125,6 +131,20 @@ export interface Course {
 	 * While true, buying and selling must be disabled in the UI.
 	 */
 	tradingPaused?: boolean;
+	/**
+	 * Whether an admin has frozen trading for this specific key (#1121).
+	 * While true, buying and selling must be disabled in the UI and a
+	 * freeze status banner must be shown with the reason and expiry.
+	 */
+	isFrozen?: boolean;
+	/** Human-readable reason for the freeze, surfaced in the banner. */
+	freezeReason?: string | null;
+	/**
+	 * ISO timestamp when the freeze expires; `null`/absent means the freeze
+	 * is indefinite. The banner auto-dismisses and trading re-enables once
+	 * this moment passes.
+	 */
+	freezeExpiresAt?: string | null;
 	/** Performance bond status for creator key protection (#975). */
 	performanceBond?: PerformanceBond | null;
 	/** Key-level circuit breaker price impact threshold in basis points. */
@@ -205,6 +225,27 @@ export interface TradeCooldownInfo {
  * Returned by GET /keys/:keyId/config.
  * All prices are in stroops (1 XLM = 10,000,000 stroops).
  */
+/**
+ * Configured price floor for a creator key (#1152).
+ *
+ * Returned by GET /keys/:keyId/price-floor.
+ * Prices can be reported in stroops (1 XLM = 10,000,000 stroops) or XLM.
+ */
+export interface KeyPriceFloor {
+	/** Key this price floor applies to. */
+	keyId?: string;
+	/** Floor price in stroops (primary precision). */
+	floorPriceStroops?: number | null;
+	/** Floor price in XLM (optional alternative representation). */
+	floorPriceXlm?: number | null;
+	/** Generic floor price number if reported as XLM or stroops. */
+	floorPrice?: number | null;
+	/** Whether the price floor is currently enabled/active on this key. */
+	isActive?: boolean;
+	/** Timestamp when the price floor was last updated by an admin. */
+	updatedAt?: string | null;
+}
+
 export interface KeyConfig {
 	/** Key this config belongs to, when the backend echoes it back. */
 	keyId?: string;
@@ -324,7 +365,7 @@ export interface GetCoursesParams {
 	sort?: CourseSortOption;
 }
 
-export type PriceHistoryInterval = '1h' | '24h' | '7d';
+export type PriceHistoryInterval = '1h' | '4h' | '24h' | '7d';
 
 export interface PriceHistoryPoint {
 	timestamp: string;
@@ -883,6 +924,23 @@ class CourseService extends BaseApiService {
 			if (error instanceof ApiError && error.status === 404) {
 				// No cooldown concept deployed for this key yet.
 				// Treat as no cooldown data so trade buttons stay enabled.
+				return null;
+			}
+
+			throw this.handleError(error);
+		}
+	}
+
+	// Get price floor info - GET /keys/:keyId/price-floor (#1152)
+	async getKeyPriceFloor(keyId: string): Promise<KeyPriceFloor | null> {
+		try {
+			const response = await this.api.get<APIResponse<KeyPriceFloor>>(
+				`/keys/${keyId}/price-floor`
+			);
+
+			return response.data.data;
+		} catch (error: unknown) {
+			if (error instanceof ApiError && error.status === 404) {
 				return null;
 			}
 

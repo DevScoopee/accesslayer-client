@@ -2,12 +2,20 @@ import { Link, useLocation, useNavigate, useParams } from 'react-router';
 import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreatorDetail, usePriceHistory } from '@/hooks/useCreators';
+import { useKeyFreeze } from '@/hooks/useKeyFreeze';
+import {
+	useKeyPriceFloor,
+	resolvePriceFloorStroops,
+	isPriceFloorActive,
+} from '@/hooks/useKeyPriceFloor';
+import type { TradeSide } from '@/components/common/TradeDialog';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useCreatorProfileStaleIndicator } from '@/hooks/useCreatorProfileStaleIndicator';
 import { useOnChainMetadata } from '@/hooks/useOnChainMetadata';
 import { resolveIpfsUrl } from '@/utils/ipfs.utils';
 import CreatorBreadcrumb from '@/components/common/CreatorBreadcrumb';
 import CreatorProfileHeader from '@/components/common/CreatorProfileHeader';
+import CreatorSocialSection from '@/components/common/CreatorSocialSection';
 import CreatorProfileInfoGrid from '@/components/common/CreatorProfileInfoGrid';
 import CreatorActivityFeed from '@/components/common/CreatorActivityFeed';
 import CreatorProfileStaleIndicator from '@/components/common/CreatorProfileStaleIndicator';
@@ -49,6 +57,7 @@ import { useWalletHoldings, useTradeMutation } from '@/hooks/useWallet';
 import CoCreatorSection from '@/components/creator/CoCreatorSection';
 import ShareTwitterButton from '@/components/common/ShareTwitterButton';
 import { PriceHistoryChart } from '@/components/common/PriceHistoryChart';
+import { BondingCurvePriceChart } from '@/components/common/BondingCurvePriceChart';
 import type { PriceHistoryInterval } from '@/services/course.service';
 import TradeDialog from '@/components/common/TradeDialog';
 import SpreadIndicator from '@/components/common/SpreadIndicator';
@@ -69,6 +78,8 @@ import { UnavailableAction } from '@/components/ui/unavailable-action';
 import GraduatedCurveMilestoneChart from '@/components/common/GraduatedCurveMilestoneChart';
 import KeyDeprecationBanner from '@/components/common/KeyDeprecationBanner';
 import KeyTradingPausedBanner from '@/components/common/KeyTradingPausedBanner';
+import KeyFreezeStatusBanner from '@/components/common/KeyFreezeStatusBanner';
+import AddToBundleButton from '@/components/common/AddToBundleButton';
 import MergeProposalBanner from '@/components/common/MergeProposalBanner';
 import KeyBuybackModal from '@/components/common/KeyBuybackModal';
 import type { KeyBuybackReceipt } from '@/hooks/useKeyBuyback';
@@ -107,6 +118,7 @@ function CreatorDetailPageContent() {
 	>(null);
 	const [deprecationDismissed, setDeprecationDismissed] = useState(false);
 	const [buyDialogOpen, setBuyDialogOpen] = useState(false);
+	const [tradeSide, setTradeSide] = useState<TradeSide>('buy');
 	const [tradeSubmitting, setTradeSubmitting] = useState(false);
 	const [interval, setInterval] = useState<PriceHistoryInterval>('24h');
 
@@ -120,6 +132,17 @@ function CreatorDetailPageContent() {
 
 	const { data: priceHistory, isLoading: isPriceHistoryLoading } =
 		usePriceHistory(id || '', interval);
+
+	// Active admin freeze (#1121): drives the banner and disables trading.
+	const keyFreeze = useKeyFreeze(creator);
+
+	// Configured price floor for this key (#1152)
+	const { data: priceFloorData } = useKeyPriceFloor(id || '');
+	const priceFloorStroops = resolvePriceFloorStroops(priceFloorData);
+	const isFloorActive = isPriceFloorActive(
+		creator ? resolveCreatorKeyPriceStroops(creator) : null,
+		priceFloorStroops
+	);
 
 	useNavigationTiming('creator_profile');
 	useDocumentTitle(creator ? `${creator.title} — AccessLayer` : null);
@@ -161,7 +184,10 @@ function CreatorDetailPageContent() {
 		userPosition?.nextBuyAllowedAt ?? creator?.nextBuyAllowedAt ?? null;
 
 	const [twapWindow, setTwapWindow] = useState<TwapWindow>('24h');
-	const { data: twap, isLoading: isTwapLoading } = useKeyTwap(id || '', twapWindow);
+	const { data: twap, isLoading: isTwapLoading } = useKeyTwap(
+		id || '',
+		twapWindow
+	);
 
 	const {
 		data: keyStats,
@@ -201,6 +227,7 @@ function CreatorDetailPageContent() {
 		auctionSupply: creator?.auctionSupply ?? null,
 		auctionSold: creator?.auctionSold ?? null,
 		auctionEndsAt: creator?.auctionEndsAt ?? null,
+		auctionSettled: creator?.auctionSettled ?? null,
 	});
 
 	const isWhitelistGateActive = Boolean(
@@ -246,9 +273,11 @@ function CreatorDetailPageContent() {
 
 	const buyDisabledReason = !userAddress
 		? 'Connect your wallet to buy this key.'
-		: isLockedOut
-			? 'Early access is restricted to approved whitelisted wallets.'
-			: undefined;
+		: auctionPhase === 'active'
+			? 'Key is currently in launch auction. Place a bid below to participate.'
+			: isLockedOut
+				? 'Early access is restricted to approved whitelisted wallets.'
+				: undefined;
 
 	const {
 		data: onChainMetadata,
@@ -304,12 +333,50 @@ function CreatorDetailPageContent() {
 
 	const isTradeCooldownActive = isActiveCooldown(tradeCooldown);
 
-	const handleConfirmBuy = async (
+	const handleConfirmTrade = async (
 		amount: number,
 		_pricePreview?: unknown,
-		slippage?: { maxPriceStroops: number | null } | null
+		slippage?: {
+			maxPriceStroops?: number | null;
+			minPriceStroops?: number | null;
+		} | null
 	) => {
 		setTradeSubmitting(true);
+
+		if (tradeSide === 'sell') {
+			try {
+				showToast.loading(
+					`Submitting sell for ${amount} key${amount === 1 ? '' : 's'}...`
+				);
+
+				await tradeMutation.mutateAsync({
+					creatorId: id || '',
+					amount: -amount,
+					priceStroops: creator
+						? resolveCreatorKeyPriceStroops(creator)
+						: null,
+					price: creator?.price,
+					minPriceStroops: slippage?.minPriceStroops ?? null,
+				});
+
+				showToast.transactionSuccess(
+					'Trade confirmed',
+					`Sold ${formatNumber(amount)} key${
+						amount === 1 ? '' : 's'
+					} from ${creator?.title || 'Creator'}`
+				);
+
+				setBuyDialogOpen(false);
+			} catch (error) {
+				showToast.error(getSignatureErrorMessage(error));
+			} finally {
+				if (id) {
+					invalidateTradeCooldownStatus(queryClient, id);
+				}
+				setTradeSubmitting(false);
+			}
+			return;
+		}
 
 		try {
 			showToast.loading(
@@ -544,6 +611,15 @@ function CreatorDetailPageContent() {
 					/>
 				</div>
 
+				{creator && (
+					<CreatorSocialSection
+						address={creator.instructorId}
+						socialLinkSources={[creator]}
+					/>
+				)}
+
+				{keyFreeze && <KeyFreezeStatusBanner freeze={keyFreeze} />}
+
 				<SectionErrorBoundary sectionName="price history">
 					<PriceHistoryChart
 						data={priceHistory}
@@ -551,6 +627,11 @@ function CreatorDetailPageContent() {
 						isLoading={isPriceHistoryLoading}
 						onIntervalChange={setInterval}
 					/>
+				</SectionErrorBoundary>
+
+				{/* Live bonding-curve price chart (#1115) */}
+				<SectionErrorBoundary sectionName="bonding curve price chart">
+					<BondingCurvePriceChart creatorId={id || ''} />
 				</SectionErrorBoundary>
 
 				<div data-testid="creator-stat-cards">
@@ -594,9 +675,11 @@ function CreatorDetailPageContent() {
 						<p className="mt-0.5 text-sm text-white/80">
 							{isKeyDeprecated(creator)
 								? 'Key is deprecated. New buys are disabled.'
-								: buyDisabledReason
-									? buyDisabledReason
-									: 'Purchase keys for this creator.'}
+								: keyFreeze
+									? keyFreeze.reason
+									: buyDisabledReason
+										? buyDisabledReason
+										: 'Purchase keys for this creator.'}
 						</p>
 
 						<SpreadIndicator
@@ -640,6 +723,17 @@ function CreatorDetailPageContent() {
 					</div>
 
 					<div className="flex items-center gap-2">
+						<AddToBundleButton
+							keyId={creator.id}
+							keyName={displayName}
+							priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
+							currentSupply={creator.creatorShareSupply ?? null}
+							thumbnail={displayAvatar ?? undefined}
+							disabled={Boolean(keyFreeze)}
+							disabledReason={keyFreeze?.reason}
+							className="min-h-11 w-full sm:h-10 sm:min-h-0 sm:w-auto"
+						/>
+
 						<PriceAlertButton
 							userId={userAddress}
 							keyId={creator.id}
@@ -656,8 +750,21 @@ function CreatorDetailPageContent() {
 							>
 								Buy Disabled (Deprecated)
 							</Button>
+						) : keyFreeze ? (
+							<UnavailableAction disabled reason={keyFreeze.reason}>
+								<Button
+									type="button"
+									data-testid="key-detail-buy-button"
+									className="min-h-11 w-full rounded-xl bg-amber-400 font-bold text-slate-950 hover:bg-amber-300 sm:h-10 sm:min-h-0 sm:w-auto"
+								>
+									Buy Key
+								</Button>
+							</UnavailableAction>
 						) : creator.tradingPaused ? (
-							<UnavailableAction disabled reason="Trading is currently paused">
+							<UnavailableAction
+								disabled
+								reason="Trading is currently paused"
+							>
 								<Button
 									type="button"
 									data-testid="key-detail-buy-button"
@@ -687,12 +794,46 @@ function CreatorDetailPageContent() {
 								cooldown={tradeCooldown}
 								label="Buy Key"
 								className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
-								onClick={() => setBuyDialogOpen(true)}
+								onClick={() => {
+									setTradeSide('buy');
+									setBuyDialogOpen(true);
+								}}
 								buttonProps={{
 									'data-testid': 'key-detail-buy-button',
 								}}
 							/>
 						)}
+
+						{holdingsCount > 0 &&
+							(isFloorActive ? (
+								<UnavailableAction
+									disabled
+									reason="PriceFloorActive: Price floor is active. Selling is disabled while current price is at or below the floor price."
+								>
+									<Button
+										type="button"
+										disabled
+										data-testid="key-detail-sell-button"
+										variant="outline"
+										className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+									>
+										Sell Key
+									</Button>
+								</UnavailableAction>
+							) : (
+								<Button
+									type="button"
+									data-testid="key-detail-sell-button"
+									variant="outline"
+									className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+									onClick={() => {
+										setTradeSide('sell');
+										setBuyDialogOpen(true);
+									}}
+								>
+									Sell Key
+								</Button>
+							))}
 					</div>
 				</div>
 
@@ -706,6 +847,10 @@ function CreatorDetailPageContent() {
 						auctionMinIncrement={creator.auctionMinIncrement}
 						auctionHighestBid={creator.auctionHighestBid}
 						auctionBids={creator.auctionBids}
+						auctionClearingPrice={creator.auctionClearingPrice}
+						auctionAllocation={creator.auctionAllocation}
+						auctionSettled={creator.auctionSettled}
+						userAddress={userAddress}
 					/>
 				)}
 
@@ -734,7 +879,10 @@ function CreatorDetailPageContent() {
 						className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4"
 						data-testid="twap-price"
 					>
-						<div aria-label={`Loading ${twapWindow === '1h' ? '1 hour' : '24 hour'} TWAP`} role="status">
+						<div
+							aria-label={`Loading ${twapWindow === '1h' ? '1 hour' : '24 hour'} TWAP`}
+							role="status"
+						>
 							<Skeleton className="h-3 w-24" />
 							<Skeleton className="mt-2 h-6 w-32" />
 						</div>
@@ -759,7 +907,9 @@ function CreatorDetailPageContent() {
 										TWAP ({twapWindow})
 									</span>
 
-									<Tooltip content={`Time-weighted average price over the past ${twapWindow === '1h' ? '1 hour' : '24 hours'}. Less sensitive to short-term manipulation.`}>
+									<Tooltip
+										content={`Time-weighted average price over the past ${twapWindow === '1h' ? '1 hour' : '24 hours'}. Less sensitive to short-term manipulation.`}
+									>
 										<button
 											type="button"
 											aria-label={`What is ${twapWindow === '1h' ? '1 hour' : '24 hour'} TWAP?`}
@@ -831,6 +981,7 @@ function CreatorDetailPageContent() {
 								twapWindow={twapWindow}
 								onTwapWindowChange={setTwapWindow}
 								isTwapLoading={isTwapLoading}
+								priceFloorStroops={priceFloorStroops}
 								height={300}
 							/>
 						</div>
@@ -974,7 +1125,7 @@ function CreatorDetailPageContent() {
 				{creator && (
 					<TradeDialog
 						open={buyDialogOpen}
-						side="buy"
+						side={tradeSide}
 						creatorName={creator.title || creator.name || 'Creator'}
 						availableHoldings={holdingsCount}
 						keyPriceStroops={resolveCreatorKeyPriceStroops(creator)}
@@ -984,10 +1135,13 @@ function CreatorDetailPageContent() {
 						keyConfig={keyConfig}
 						isKeyConfigLoading={isKeyConfigLoading}
 						onOpenChange={setBuyDialogOpen}
-						onConfirm={handleConfirmBuy}
+						onConfirm={handleConfirmTrade}
 						isSubmitting={tradeSubmitting}
 						requireConfirmation={true}
 						tradingPaused={creator.tradingPaused}
+						keyFreeze={keyFreeze}
+						priceFloorStroops={priceFloorStroops}
+						priceFloorActive={isFloorActive}
 					/>
 				)}
 

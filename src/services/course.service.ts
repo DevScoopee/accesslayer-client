@@ -338,7 +338,7 @@ export interface GetCoursesParams {
 	sort?: CourseSortOption;
 }
 
-export type PriceHistoryInterval = '1h' | '24h' | '7d';
+export type PriceHistoryInterval = '1h' | '4h' | '24h' | '7d';
 
 export interface PriceHistoryPoint {
 	timestamp: string;

@@ -50,6 +50,7 @@ import { useWalletHoldings, useTradeMutation } from '@/hooks/useWallet';
 import CoCreatorSection from '@/components/creator/CoCreatorSection';
 import ShareTwitterButton from '@/components/common/ShareTwitterButton';
 import { PriceHistoryChart } from '@/components/common/PriceHistoryChart';
+import { BondingCurvePriceChart } from '@/components/common/BondingCurvePriceChart';
 import type { PriceHistoryInterval } from '@/services/course.service';
 import TradeDialog from '@/components/common/TradeDialog';
 import SpreadIndicator from '@/components/common/SpreadIndicator';
@@ -559,6 +560,11 @@ function CreatorDetailPageContent() {
 						isLoading={isPriceHistoryLoading}
 						onIntervalChange={setInterval}
 					/>
+				</SectionErrorBoundary>
+
+				{/* Live bonding-curve price chart (#1115) */}
+				<SectionErrorBoundary sectionName="bonding curve price chart">
+					<BondingCurvePriceChart creatorId={id || ''} />
 				</SectionErrorBoundary>
 
 				<div data-testid="creator-stat-cards">

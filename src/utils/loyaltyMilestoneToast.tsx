@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 import { Trophy, X } from 'lucide-react';
-import type { ToastOptions } from 'react-hot-toast';
+
 
 const MILESTONE_TOAST_DURATION_MS = 8_000;
 

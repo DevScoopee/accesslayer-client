@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ChevronDown, ChevronUp, ExternalLink, History, ArrowRightLeft, DollarSign } from 'lucide-react';
+import { ChevronDown, ChevronUp, ExternalLink, History, ArrowRightLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface RebalanceSwap {

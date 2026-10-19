@@ -36,6 +36,7 @@ import LaunchPenaltyWarning from '@/components/common/LaunchPenaltyWarning';
 import SlippageToleranceSelector from '@/components/common/SlippageToleranceSelector';
 import PriceImpactWarning from '@/components/common/PriceImpactWarning';
 import TradeConfirmationModal from '@/components/common/TradeConfirmationModal';
+import { useFeeDiscount } from '@/hooks/useFeeDiscount';
 import {
 	TRADE_FEE_ESTIMATE,
 	FEE_BOUNDS,
@@ -249,6 +250,9 @@ const TradeDialog: React.FC<TradeDialogProps> = ({
 	);
 	const [confirmationOpen, setConfirmationOpen] = useState(false);
 	const amountInputRef = useRef<HTMLInputElement | null>(null);
+
+	// Loyalty fee discount (#1173) — shown on the buy confirmation step.
+	const { data: feeDiscount } = useFeeDiscount(activeAddress);
 	const pricePreviewFailureLogged = useRef(false);
 	const previewAbortControllerRef = useRef<AbortController | null>(null);
 	// Capture whatever had focus right before dialog opened; restore on close.
@@ -1134,6 +1138,7 @@ const TradeDialog: React.FC<TradeDialogProps> = ({
 						breakdown={pricePreview}
 						isLoading={previewLoading}
 						error={previewError}
+						feeDiscount={feeDiscount ?? null}
 						onRetry={() => {
 							setPreviewError(null);
 							setPreviewLoading(true);

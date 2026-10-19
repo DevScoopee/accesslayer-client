@@ -14,6 +14,8 @@ export interface Course {
 	/** ISO timestamp for the next scheduled drop, when applicable. */
 	nextDropAt?: string;
 	creatorShareSupply?: number;
+	/** Configured max supply cap for this key; null or undefined for uncapped keys. */
+	maxSupply?: number | null;
 	instructorId: string;
 	thumbnail?: string;
 	category: string;

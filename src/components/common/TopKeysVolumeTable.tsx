@@ -1,10 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router';
-import Skeleton from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import CreatorInitialsAvatar from '@/components/common/CreatorInitialsAvatar';
 import {
-	formatNumber,
 	formatPercent,
 	formatXlmPrice,
 } from '@/utils/numberFormat.utils';

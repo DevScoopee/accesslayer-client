@@ -183,7 +183,10 @@ function CreatorDetailPageContent() {
 		userPosition?.nextBuyAllowedAt ?? creator?.nextBuyAllowedAt ?? null;
 
 	const [twapWindow, setTwapWindow] = useState<TwapWindow>('24h');
-	const { data: twap, isLoading: isTwapLoading } = useKeyTwap(id || '', twapWindow);
+	const { data: twap, isLoading: isTwapLoading } = useKeyTwap(
+		id || '',
+		twapWindow
+	);
 
 	const {
 		data: keyStats,
@@ -223,6 +226,7 @@ function CreatorDetailPageContent() {
 		auctionSupply: creator?.auctionSupply ?? null,
 		auctionSold: creator?.auctionSold ?? null,
 		auctionEndsAt: creator?.auctionEndsAt ?? null,
+		auctionSettled: creator?.auctionSettled ?? null,
 	});
 
 	const isWhitelistGateActive = Boolean(
@@ -268,9 +272,11 @@ function CreatorDetailPageContent() {
 
 	const buyDisabledReason = !userAddress
 		? 'Connect your wallet to buy this key.'
-		: isLockedOut
-			? 'Early access is restricted to approved whitelisted wallets.'
-			: undefined;
+		: auctionPhase === 'active'
+			? 'Key is currently in launch auction. Place a bid below to participate.'
+			: isLockedOut
+				? 'Early access is restricted to approved whitelisted wallets.'
+				: undefined;
 
 	const {
 		data: onChainMetadata,
@@ -329,7 +335,10 @@ function CreatorDetailPageContent() {
 	const handleConfirmTrade = async (
 		amount: number,
 		_pricePreview?: unknown,
-		slippage?: { maxPriceStroops?: number | null; minPriceStroops?: number | null } | null
+		slippage?: {
+			maxPriceStroops?: number | null;
+			minPriceStroops?: number | null;
+		} | null
 	) => {
 		setTradeSubmitting(true);
 
@@ -744,7 +753,10 @@ function CreatorDetailPageContent() {
 								</Button>
 							</UnavailableAction>
 						) : creator.tradingPaused ? (
-							<UnavailableAction disabled reason="Trading is currently paused">
+							<UnavailableAction
+								disabled
+								reason="Trading is currently paused"
+							>
 								<Button
 									type="button"
 									data-testid="key-detail-buy-button"
@@ -775,17 +787,17 @@ function CreatorDetailPageContent() {
 								label="Buy Key"
 								className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
 								onClick={() => {
-								setTradeSide('buy');
-								setBuyDialogOpen(true);
-							}}
+									setTradeSide('buy');
+									setBuyDialogOpen(true);
+								}}
 								buttonProps={{
 									'data-testid': 'key-detail-buy-button',
 								}}
 							/>
 						)}
 
-						{holdingsCount > 0 && (
-							isFloorActive ? (
+						{holdingsCount > 0 &&
+							(isFloorActive ? (
 								<UnavailableAction
 									disabled
 									reason="PriceFloorActive: Price floor is active. Selling is disabled while current price is at or below the floor price."
@@ -813,8 +825,7 @@ function CreatorDetailPageContent() {
 								>
 									Sell Key
 								</Button>
-							)
-						)}
+							))}
 					</div>
 				</div>
 
@@ -828,6 +839,10 @@ function CreatorDetailPageContent() {
 						auctionMinIncrement={creator.auctionMinIncrement}
 						auctionHighestBid={creator.auctionHighestBid}
 						auctionBids={creator.auctionBids}
+						auctionClearingPrice={creator.auctionClearingPrice}
+						auctionAllocation={creator.auctionAllocation}
+						auctionSettled={creator.auctionSettled}
+						userAddress={userAddress}
 					/>
 				)}
 
@@ -856,7 +871,10 @@ function CreatorDetailPageContent() {
 						className="rounded-2xl border border-white/10 bg-white/[0.03] px-5 py-4"
 						data-testid="twap-price"
 					>
-						<div aria-label={`Loading ${twapWindow === '1h' ? '1 hour' : '24 hour'} TWAP`} role="status">
+						<div
+							aria-label={`Loading ${twapWindow === '1h' ? '1 hour' : '24 hour'} TWAP`}
+							role="status"
+						>
 							<Skeleton className="h-3 w-24" />
 							<Skeleton className="mt-2 h-6 w-32" />
 						</div>
@@ -881,7 +899,9 @@ function CreatorDetailPageContent() {
 										TWAP ({twapWindow})
 									</span>
 
-									<Tooltip content={`Time-weighted average price over the past ${twapWindow === '1h' ? '1 hour' : '24 hours'}. Less sensitive to short-term manipulation.`}>
+									<Tooltip
+										content={`Time-weighted average price over the past ${twapWindow === '1h' ? '1 hour' : '24 hours'}. Less sensitive to short-term manipulation.`}
+									>
 										<button
 											type="button"
 											aria-label={`What is ${twapWindow === '1h' ? '1 hour' : '24 hour'} TWAP?`}

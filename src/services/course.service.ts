@@ -73,6 +73,12 @@ export interface Course {
 	auctionHighestBid?: number;
 	/** Pre-launch auction bid history, newest first (#924). */
 	auctionBids?: AuctionBidEntry[];
+	/** Final clearing price for settled auction in XLM (#1164). */
+	auctionClearingPrice?: number;
+	/** Number of keys allocated in the auction settlement (#1164). */
+	auctionAllocation?: number;
+	/** Whether the auction has been settled on-chain (#1164). */
+	auctionSettled?: boolean;
 	/**
 	 * Early-sell penalty in basis points (0–2000 = 0%–20%).
 	 * Applied to sells within the first 7 days after key creation.

@@ -12,7 +12,9 @@ import { StableButtonContent } from '@/components/ui/stable-button-content';
 import { formatNumber } from '@/utils/numberFormat.utils';
 import { formatDisplayKeyPrice } from '@/utils/keyPriceDisplay.utils';
 import PriceImpactWarning from '@/components/common/PriceImpactWarning';
+import DynamicFeeBreakdown from '@/components/common/DynamicFeeBreakdown';
 import { isHighPriceImpact } from '@/utils/priceImpact.utils';
+import type { DynamicFeeBreakdown as DynamicFeeBreakdownData } from '@/utils/dynamicFeeRate.utils';
 import { ShieldCheck, ArrowRight, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +30,14 @@ export interface TradeConfirmationModalProps {
 	maxPriceStroops?: number | null;
 	minPriceStroops?: number | null;
 	priceImpactPercent?: number | null;
+	/** Dynamic fee quote from the contract; rendered when provided (#994). */
+	feeBreakdown?: DynamicFeeBreakdownData | null;
+	/** True while the dynamic fee rate is being fetched from the contract. */
+	feeIsLoading?: boolean;
+	/** Error message when the dynamic fee rate could not be fetched. */
+	feeError?: string | null;
+	/** Retry callback for the dynamic fee fetch. */
+	onFeeRetry?: () => void;
 	onConfirm: () => Promise<void> | void;
 	onCancel?: () => void;
 	isSubmitting?: boolean;
@@ -49,6 +59,10 @@ export const TradeConfirmationModal: React.FC<TradeConfirmationModalProps> = ({
 	maxPriceStroops,
 	minPriceStroops,
 	priceImpactPercent,
+	feeBreakdown = null,
+	feeIsLoading = false,
+	feeError = null,
+	onFeeRetry,
 	onConfirm,
 	onCancel,
 	isSubmitting = false,
@@ -150,6 +164,17 @@ export const TradeConfirmationModal: React.FC<TradeConfirmationModalProps> = ({
 						)}
 					</div>
 
+					{/* Dynamic fee breakdown (#994) — rendered whenever a fee quote
+					    or its fetch state is supplied by the parent. */}
+					{(feeBreakdown || feeIsLoading || feeError) && (
+						<DynamicFeeBreakdown
+							breakdown={feeBreakdown}
+							isLoading={feeIsLoading}
+							error={feeError}
+							onRetry={onFeeRetry ?? (() => {})}
+						/>
+					)}
+
 					{/* Slippage Protection Bounds */}
 					<div className="rounded-xl border border-amber-500/20 bg-amber-500/[0.05] p-4 space-y-3">
 						<div className="flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-amber-300">
@@ -215,10 +240,14 @@ export const TradeConfirmationModal: React.FC<TradeConfirmationModalProps> = ({
 
 					{/* Price Impact Warning if exceeds 5% */}
 					{priceImpactPercent != null &&
-						isHighPriceImpact(priceImpactPercent) && (
+						isHighPriceImpact(
+							priceImpactPercent,
+							slippageTolerancePercent
+						) && (
 							<div data-testid="confirmation-modal-impact-warning">
 								<PriceImpactWarning
 									impactPercent={priceImpactPercent}
+									threshold={slippageTolerancePercent}
 								/>
 							</div>
 						)}

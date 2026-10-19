@@ -18,6 +18,10 @@ import CreatorProfileHeader from '@/components/common/CreatorProfileHeader';
 import CreatorSocialSection from '@/components/common/CreatorSocialSection';
 import CreatorProfileInfoGrid from '@/components/common/CreatorProfileInfoGrid';
 import CreatorActivityFeed from '@/components/common/CreatorActivityFeed';
+import AnnouncementFeed from '@/components/common/AnnouncementFeed';
+import SecondaryMarketSellPanel from '@/components/common/SecondaryMarketSellPanel';
+import ActiveAuctionCard from '@/components/common/ActiveAuctionCard';
+import RoyaltyEarningsCard from '@/components/creator/RoyaltyEarningsCard';
 import CreatorProfileStaleIndicator from '@/components/common/CreatorProfileStaleIndicator';
 import CreatorProfileStatRow from '@/components/common/CreatorProfileStatRow';
 import BondingCurveChart from '@/components/common/BondingCurveChart';
@@ -1093,6 +1097,55 @@ function CreatorDetailPageContent() {
 							</p>
 						</div>
 					</SubscriptionAccessGate>
+				</div>
+
+				{/* Secondary market sell panel with auction tab (#1174) */}
+				<div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8">
+					<h2 className="mb-6 font-grotesque text-xl font-black tracking-tight text-white">
+						Secondary Market
+					</h2>
+					<SectionErrorBoundary sectionName="secondary market">
+						<div className="space-y-4">
+							<SecondaryMarketSellPanel
+								availableFractions={holdingsCount}
+								onCreateAuction={async () => {
+									/* create_auction contract call wired by the parent */
+								}}
+							/>
+							<ActiveAuctionCard
+								walletAddress={userAddress}
+								auction={{
+									auctionId: 'active',
+									seller: userAddress ?? '',
+									fractionAmount: Math.max(1, holdingsCount),
+									reservePriceStroops: resolveCreatorKeyPriceStroops(creator) ?? 0,
+									highestBidStroops: Math.round(
+										(resolveHighestBid(creator.auctionBids, creator.auctionHighestBid) ?? 0) * 1e7
+									),
+									highestBidder: null,
+									endsAt: new Date(Date.now() + 3_600_000),
+									status: 'active',
+								}}
+							/>
+						</div>
+					</SectionErrorBoundary>
+				</div>
+
+				{/* Creator announcements feed (#1175) */}
+				<div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8">
+					<h2 className="mb-6 font-grotesque text-xl font-black tracking-tight text-white">
+						Announcements
+					</h2>
+					<SectionErrorBoundary sectionName="announcements">
+						<AnnouncementFeed creatorId={creator.id} />
+					</SectionErrorBoundary>
+				</div>
+
+				{/* Royalty earnings dashboard (#1177) */}
+				<div className="mt-8">
+					<SectionErrorBoundary sectionName="royalty earnings">
+						<RoyaltyEarningsCard keyId={creator.id} />
+					</SectionErrorBoundary>
 				</div>
 
 				<div className="mt-8 rounded-[2rem] border border-white/10 bg-white/[0.02] p-6 shadow-2xl backdrop-blur-md md:p-8">

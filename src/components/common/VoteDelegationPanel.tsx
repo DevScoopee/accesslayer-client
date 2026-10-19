@@ -21,7 +21,6 @@ interface VoteDelegationPanelProps {
 }
 
 export default function VoteDelegationPanel({
-  creatorId,
   currentDelegate,
   delegationBalance = 0,
   onDelegationComplete,

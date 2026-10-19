@@ -33,7 +33,6 @@ interface KeyTransferUIProps {
 }
 
 export default function KeyTransferUI({
-  keyId,
   keyName,
   currentOwner,
   onTransferInitiated,

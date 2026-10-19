@@ -60,9 +60,7 @@ const AUCTION_PHASES: AuctionPhase[] = [
 ];
 
 export default function LiquidityBootstrappingAuctionUI({
-  keyId,
   keyName,
-  auctionId,
   startTime,
   endTime,
   totalTokensAvailable,

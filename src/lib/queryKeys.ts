@@ -97,4 +97,9 @@ export const queryKeys = {
 		summary: (wallet: string) => ['referrals', wallet, 'summary'] as const,
 		wallets: (wallet: string) => ['referrals', wallet, 'wallets'] as const,
 	},
+	airdrop: {
+		all: () => ['airdrop'] as const,
+		allocations: (wallet: string) =>
+			['airdrop', wallet, 'allocations'] as const,
+	},
 } as const;

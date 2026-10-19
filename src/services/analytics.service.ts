@@ -135,14 +135,13 @@ export class AnalyticsService extends BaseApiService {
 		for (let daysAgo = dayCount - 1; daysAgo >= 0; daysAgo--) {
 			const timestamp = new Date(now - daysAgo * dayMs).toISOString();
 			const progress = dayCount - daysAgo;
-			tvlHistory.push({
+			const point: ProtocolHistoryPoint = {
 				timestamp,
 				tvl: Math.round(baseTvl * (1 + Math.sin(progress / 4) * 0.08 + progress * 0.004)),
-			});
-			volumeHistory.push({
-				timestamp,
 				volume: Math.round(dailyVolume * (1 + Math.cos(progress) * 0.35)),
-			});
+			};
+			tvlHistory.push(point);
+			volumeHistory.push(point);
 		}
 
 		const latestTvl = tvlHistory[tvlHistory.length - 1]?.tvl ?? baseTvl;

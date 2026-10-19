@@ -15,6 +15,7 @@ import { useOnChainMetadata } from '@/hooks/useOnChainMetadata';
 import { resolveIpfsUrl } from '@/utils/ipfs.utils';
 import CreatorBreadcrumb from '@/components/common/CreatorBreadcrumb';
 import CreatorProfileHeader from '@/components/common/CreatorProfileHeader';
+import CreatorSocialSection from '@/components/common/CreatorSocialSection';
 import CreatorProfileInfoGrid from '@/components/common/CreatorProfileInfoGrid';
 import CreatorActivityFeed from '@/components/common/CreatorActivityFeed';
 import CreatorProfileStaleIndicator from '@/components/common/CreatorProfileStaleIndicator';
@@ -609,6 +610,13 @@ function CreatorDetailPageContent() {
 						className="mt-3 size-11 shrink-0 sm:size-9"
 					/>
 				</div>
+
+				{creator && (
+					<CreatorSocialSection
+						address={creator.instructorId}
+						socialLinkSources={[creator]}
+					/>
+				)}
 
 				{keyFreeze && <KeyFreezeStatusBanner freeze={keyFreeze} />}
 

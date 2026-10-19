@@ -73,6 +73,12 @@ export const queryKeys = {
 			wallet
 				? (['creators', creatorId, 'trade-cooldown', wallet] as const)
 				: (['creators', creatorId, 'trade-cooldown'] as const),
+		// Wallet-scoped lock-up status (#1163); invalidate without the wallet
+		// to drop every wallet's entry for the key.
+		lockup: (creatorId: string, wallet?: string) =>
+			wallet
+				? (['creators', creatorId, 'lockup', wallet] as const)
+				: (['creators', creatorId, 'lockup'] as const),
 		whitelist: (creatorId: string) =>
 			['creators', creatorId, 'whitelist'] as const,
 		publicProfile: (address: string) =>

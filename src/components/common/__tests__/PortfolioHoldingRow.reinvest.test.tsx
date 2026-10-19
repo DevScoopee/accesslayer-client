@@ -3,6 +3,12 @@ import { describe, expect, it, vi } from 'vitest';
 import PortfolioHoldingRow from '../PortfolioHoldingRow';
 import type { HeldKeyPosition } from '@/utils/portfolioValue.utils';
 
+vi.mock('@/hooks/useKeyLockup', () => ({
+	useKeyLockup: () => ({ data: null }),
+	useRemainingUnlockSeconds: () => 0,
+	isKeyLockupActive: () => false,
+}));
+
 const basePosition: HeldKeyPosition = {
 	creatorId: 'creator-1',
 	quantity: 5,

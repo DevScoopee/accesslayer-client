@@ -7,6 +7,12 @@ import {
 } from '@/utils/lockupCountdown.utils';
 import PortfolioHoldingRow from '../PortfolioHoldingRow';
 
+vi.mock('@/hooks/useKeyLockup', () => ({
+	useKeyLockup: () => ({ data: null }),
+	useRemainingUnlockSeconds: () => 0,
+	isKeyLockupActive: () => false,
+}));
+
 describe('LockupCountdown', () => {
 	beforeEach(() => {
 		vi.useFakeTimers();

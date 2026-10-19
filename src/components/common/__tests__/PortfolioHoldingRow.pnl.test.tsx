@@ -1,7 +1,13 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import PortfolioHoldingRow from '../PortfolioHoldingRow';
 import type { HeldKeyPosition } from '@/utils/portfolioValue.utils';
+
+vi.mock('@/hooks/useKeyLockup', () => ({
+	useKeyLockup: () => ({ data: null }),
+	useRemainingUnlockSeconds: () => 0,
+	isKeyLockupActive: () => false,
+}));
 
 const STROOPS = 10_000_000;
 

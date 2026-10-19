@@ -11,7 +11,6 @@ import { formatDisplayKeyPrice } from '@/utils/keyPriceDisplay.utils';
 import showToast from '@/utils/toast.util';
 import {
 	AUCTION_DURATIONS,
-	auctionEndTime,
 	buildAuctionSummary,
 	durationLabelToSeconds,
 	type AuctionDurationLabel,

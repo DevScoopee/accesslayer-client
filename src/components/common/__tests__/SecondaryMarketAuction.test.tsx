@@ -14,7 +14,6 @@ import SecondaryMarketSellPanel from '@/components/common/SecondaryMarketSellPan
 import ActiveAuctionCard from '@/components/common/ActiveAuctionCard';
 import {
 	AUCTION_DURATIONS,
-	auctionEndTime,
 	buildAuctionSummary,
 	durationLabelToSeconds,
 	isAuctionSeller,

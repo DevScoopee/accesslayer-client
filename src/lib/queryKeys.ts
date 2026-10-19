@@ -9,6 +9,7 @@
 
 import type { GetCoursesParams } from '@/services/course.service';
 import type { VolumeWindow } from '@/services/leaderboard.service';
+import type { ProtocolTimeRange } from '@/services/analytics.service';
 
 export const queryKeys = {
 	creatorProfile: {
@@ -194,6 +195,11 @@ export const queryKeys = {
 	status: {
 		all: () => ['status'] as const,
 		platform: () => ['status', 'platform'] as const,
+	},
+	protocolAnalytics: {
+		all: () => ['protocolAnalytics'] as const,
+		data: (range: ProtocolTimeRange = '30d') =>
+			['protocolAnalytics', 'data', range] as const,
 	},
 	creatorRevenue: {
 		all: () => ['creatorRevenue'] as const,

@@ -35,6 +35,13 @@ import { cn } from '@/lib/utils';
 import { ArrowRight } from 'lucide-react';
 import { useSlippageTolerancePreference } from '@/hooks/useSlippageTolerancePreference';
 import { useGlobalPause } from '@/hooks/useGlobalPause';
+import { useKeyTradeLimits } from '@/hooks/useKeyTradeLimits';
+import {
+	clampTradeAmountInput,
+	formatTradeLimit,
+	hasTradeLimit,
+	isTradeLimitReached,
+} from '@/utils/tradeLimit.utils';
 import { UnavailableAction } from '@/components/ui/unavailable-action';
 export interface BuySellTradeParams {
 	creatorId?: string;
@@ -153,6 +160,10 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 			: false);
 
 	const isSubmitting = externalIsSubmitting || internalSubmitting;
+
+	// Per-swap size limits for this key; only the active side's limit applies (#1160).
+	const { limits: tradeLimits } = useKeyTradeLimits(creatorId);
+	const activeTradeLimit = side === 'buy' ? tradeLimits.maxBuy : tradeLimits.maxSell;
 
 	const parsedAmount = useMemo(() => {
 		const trimmed = amountText.trim();
@@ -561,7 +572,9 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 						inputMode="numeric"
 						value={amountText}
 						onChange={e => {
-							setAmountText(e.target.value);
+							setAmountText(
+								clampTradeAmountInput(e.target.value, activeTradeLimit)
+							);
 							setTouched(true);
 						}}
 						disabled={isSubmitting || (side === 'sell' && isFloorActive)}
@@ -596,6 +609,29 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 					>
 						{validationError}
 					</p>
+				)}
+				{/* Per-swap trade limit helper and inline limit error (#1160) */}
+				{hasTradeLimit(activeTradeLimit) && (
+					<div className="space-y-1">
+						<p
+							id="trade-limit-helper"
+							data-testid="trade-limit-helper"
+							className="text-[11px] text-white/50"
+						>
+							Max {side === 'buy' ? 'buy' : 'sell'} per swap:{' '}
+							{formatTradeLimit(activeTradeLimit)} keys
+						</p>
+						{isTradeLimitReached(parsedAmount, activeTradeLimit) && (
+							<p
+								role="alert"
+								data-testid="trade-limit-exceeded"
+								className="text-xs text-amber-300"
+							>
+								Trade limit reached: you can {side} up to{' '}
+								{formatTradeLimit(activeTradeLimit)} keys per swap.
+							</p>
+						)}
+					</div>
 				)}
 				{/* Holding cap indicator on buy form (#1015) */}
 				{side === 'buy' && effectiveHoldingCap != null && effectiveHoldingCap > 0 && (
@@ -685,9 +721,11 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 			<UnavailableAction
 				disabled={paused || (side === 'sell' && isFloorActive)}
 				reason={
-					side === 'sell' && isFloorActive
-						? 'PriceFloorActive: Selling is disabled while current price is at or below the floor price.'
-						: 'Trading is currently paused'
+					globalPaused
+						? 'Platform Paused'
+						: side === 'sell' && isFloorActive
+							? 'PriceFloorActive: Selling is disabled while current price is at or below the floor price.'
+							: 'Trading is currently paused'
 				}
 			>
 				<Button

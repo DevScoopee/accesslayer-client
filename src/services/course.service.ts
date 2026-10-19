@@ -445,6 +445,12 @@ export interface KeyStats {
 }
 
 /** Single bid placed during a key's pre-launch auction window (#924). */
+/** Per-swap buy/sell size caps for a key (#1160). `null` means no limit. */
+export interface KeyTradeLimits {
+	maxBuy: number | null;
+	maxSell: number | null;
+}
+
 export interface AuctionBidEntry {
 	/** Unique bid id from the contract. */
 	id: string;
@@ -631,6 +637,22 @@ class CourseService extends BaseApiService {
 			);
 
 			return response.data.data ?? [];
+		} catch (error) {
+			throw this.handleError(error);
+		}
+	}
+
+	/**
+	 * Per-swap trade size limits for a key (#1160).
+	 * GET /keys/:keyId/trade-limits
+	 */
+	async getKeyTradeLimits(keyId: string): Promise<KeyTradeLimits> {
+		try {
+			const response = await this.api.get<APIResponse<KeyTradeLimits>>(
+				`/keys/${keyId}/trade-limits`
+			);
+
+			return response.data.data ?? { maxBuy: null, maxSell: null };
 		} catch (error) {
 			throw this.handleError(error);
 		}

@@ -1227,9 +1227,11 @@ const TradeDialog: React.FC<TradeDialogProps> = ({
 				reason={
 					keyFreeze
 						? keyFreeze.reason
-						: side === 'sell' && isFloorActive
-							? 'PriceFloorActive: Selling is disabled while current price is at or below the floor price.'
-							: 'Trading is currently paused'
+						: globalPaused
+							? 'Platform Paused'
+							: side === 'sell' && isFloorActive
+								? 'PriceFloorActive: Selling is disabled while current price is at or below the floor price.'
+								: 'Trading is currently paused'
 				}
 			>
 				<Button

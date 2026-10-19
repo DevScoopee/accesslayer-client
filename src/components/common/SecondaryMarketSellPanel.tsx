@@ -95,8 +95,7 @@ const SecondaryMarketSellPanel: React.FC<SecondaryMarketSellPanelProps> = ({
 				durationSeconds: auctionSummary.durationSeconds,
 			});
 			showToast.success(
-				'Auction created',
-				`Ends ${auctionSummary.endTime.toLocaleTimeString()}`
+				`Auction created — ends ${auctionSummary.endTime.toLocaleTimeString()}`
 			);
 		} catch (error) {
 			showToast.error(

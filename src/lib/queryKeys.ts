@@ -166,6 +166,10 @@ export const queryKeys = {
 		all: () => ['staking'] as const,
 		dashboard: (wallet: string) => ['staking', wallet, 'dashboard'] as const,
 	},
+	airdropClaims: {
+		all: () => ['airdropClaims'] as const,
+		list: (wallet: string) => ['airdropClaims', wallet, 'list'] as const,
+	},
 	atomicSwap: {
 		all: () => ['atomic-swap'] as const,
 		proposal: (proposalId: string) =>

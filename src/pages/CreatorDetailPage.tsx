@@ -54,6 +54,7 @@ import { useNavigationTiming } from '@/hooks/useNavigationTiming';
 import { useKeyHolders } from '@/hooks/useKeyHolders';
 import { useProfileStore } from '@/hooks/useProfileStore';
 import { useWalletHoldings, useTradeMutation } from '@/hooks/useWallet';
+import KeyMintProgressSection from '@/components/common/KeyMintProgressSection';
 import CoCreatorSection from '@/components/creator/CoCreatorSection';
 import ShareTwitterButton from '@/components/common/ShareTwitterButton';
 import { PriceHistoryChart } from '@/components/common/PriceHistoryChart';
@@ -637,6 +638,18 @@ function CreatorDetailPageContent() {
 				<div data-testid="creator-stat-cards">
 					<CreatorProfileStatRow items={statItems} />
 				</div>
+
+				{/* Mint Progress Bar & Supply Cap */}
+				<KeyMintProgressSection
+					currentSupply={creator.creatorShareSupply}
+					maxSupply={creator.maxSupply}
+					isLoading={isLoading}
+					onBuy={() => {
+						setTradeSide('buy');
+						setBuyDialogOpen(true);
+					}}
+					isSubmitting={tradeSubmitting || tradeMutation.isPending}
+				/>
 
 				<SectionErrorBoundary sectionName="key statistics">
 					<KeyStatsPanel

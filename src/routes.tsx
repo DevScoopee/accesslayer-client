@@ -35,6 +35,7 @@ import KeyDiscoveryFeedPage from './pages/KeyDiscoveryFeedPage';
 import WalletPortfolioPage from './pages/WalletPortfolioPage';
 import AutoInvestDashboardPage from './pages/AutoInvestDashboardPage';
 import AirdropClaimsPage from './pages/AirdropClaimsPage';
+import ProtocolAnalyticsPage from './pages/ProtocolAnalyticsPage';
 import RouteErrorBoundary from './components/common/RouteErrorBoundary';
 
 function withRouteErrorBoundary(element: ReactNode, routeName: string) {
@@ -241,6 +242,14 @@ export const routes = [
 				// Public platform status page (#1051).
 				path: '/status',
 				element: <StatusPage />,
+			},
+			{
+				// Public protocol analytics dashboard (#1167).
+				path: '/analytics',
+				element: withRouteErrorBoundary(
+					<ProtocolAnalyticsPage />,
+					'Protocol analytics'
+				),
 			},
 			{
 				// Global search results page (#1053).

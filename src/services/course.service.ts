@@ -219,6 +219,27 @@ export interface TradeCooldownInfo {
  * Returned by GET /keys/:keyId/config.
  * All prices are in stroops (1 XLM = 10,000,000 stroops).
  */
+/**
+ * Configured price floor for a creator key (#1152).
+ *
+ * Returned by GET /keys/:keyId/price-floor.
+ * Prices can be reported in stroops (1 XLM = 10,000,000 stroops) or XLM.
+ */
+export interface KeyPriceFloor {
+	/** Key this price floor applies to. */
+	keyId?: string;
+	/** Floor price in stroops (primary precision). */
+	floorPriceStroops?: number | null;
+	/** Floor price in XLM (optional alternative representation). */
+	floorPriceXlm?: number | null;
+	/** Generic floor price number if reported as XLM or stroops. */
+	floorPrice?: number | null;
+	/** Whether the price floor is currently enabled/active on this key. */
+	isActive?: boolean;
+	/** Timestamp when the price floor was last updated by an admin. */
+	updatedAt?: string | null;
+}
+
 export interface KeyConfig {
 	/** Key this config belongs to, when the backend echoes it back. */
 	keyId?: string;
@@ -875,6 +896,23 @@ class CourseService extends BaseApiService {
 			if (error instanceof ApiError && error.status === 404) {
 				// No cooldown concept deployed for this key yet.
 				// Treat as no cooldown data so trade buttons stay enabled.
+				return null;
+			}
+
+			throw this.handleError(error);
+		}
+	}
+
+	// Get price floor info - GET /keys/:keyId/price-floor (#1152)
+	async getKeyPriceFloor(keyId: string): Promise<KeyPriceFloor | null> {
+		try {
+			const response = await this.api.get<APIResponse<KeyPriceFloor>>(
+				`/keys/${keyId}/price-floor`
+			);
+
+			return response.data.data;
+		} catch (error: unknown) {
+			if (error instanceof ApiError && error.status === 404) {
 				return null;
 			}
 

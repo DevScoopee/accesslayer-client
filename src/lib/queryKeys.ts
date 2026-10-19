@@ -56,6 +56,8 @@ export const queryKeys = {
 			['creators', creatorId, 'oracle-price'] as const,
 		performanceBond: (creatorId: string) =>
 			['creators', creatorId, 'performance-bond'] as const,
+		priceFloor: (creatorId: string) =>
+			['creators', creatorId, 'price-floor'] as const,
 		// Optional wallet scopes the cache per connected wallet (#915); omit it
 		// to address every wallet's entry for the key (e.g. invalidation).
 		tradeCooldown: (creatorId: string, wallet?: string) =>

@@ -3,6 +3,12 @@ import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useCreatorDetail, usePriceHistory } from '@/hooks/useCreators';
 import { useKeyFreeze } from '@/hooks/useKeyFreeze';
+import {
+	useKeyPriceFloor,
+	resolvePriceFloorStroops,
+	isPriceFloorActive,
+} from '@/hooks/useKeyPriceFloor';
+import type { TradeSide } from '@/components/common/TradeDialog';
 import { useRecentlyViewed } from '@/hooks/useRecentlyViewed';
 import { useCreatorProfileStaleIndicator } from '@/hooks/useCreatorProfileStaleIndicator';
 import { useOnChainMetadata } from '@/hooks/useOnChainMetadata';
@@ -111,6 +117,7 @@ function CreatorDetailPageContent() {
 	>(null);
 	const [deprecationDismissed, setDeprecationDismissed] = useState(false);
 	const [buyDialogOpen, setBuyDialogOpen] = useState(false);
+	const [tradeSide, setTradeSide] = useState<TradeSide>('buy');
 	const [tradeSubmitting, setTradeSubmitting] = useState(false);
 	const [interval, setInterval] = useState<PriceHistoryInterval>('24h');
 
@@ -127,6 +134,14 @@ function CreatorDetailPageContent() {
 
 	// Active admin freeze (#1121): drives the banner and disables trading.
 	const keyFreeze = useKeyFreeze(creator);
+
+	// Configured price floor for this key (#1152)
+	const { data: priceFloorData } = useKeyPriceFloor(id || '');
+	const priceFloorStroops = resolvePriceFloorStroops(priceFloorData);
+	const isFloorActive = isPriceFloorActive(
+		creator ? resolveCreatorKeyPriceStroops(creator) : null,
+		priceFloorStroops
+	);
 
 	useNavigationTiming('creator_profile');
 	useDocumentTitle(creator ? `${creator.title} — AccessLayer` : null);
@@ -311,12 +326,47 @@ function CreatorDetailPageContent() {
 
 	const isTradeCooldownActive = isActiveCooldown(tradeCooldown);
 
-	const handleConfirmBuy = async (
+	const handleConfirmTrade = async (
 		amount: number,
 		_pricePreview?: unknown,
-		slippage?: { maxPriceStroops: number | null } | null
+		slippage?: { maxPriceStroops?: number | null; minPriceStroops?: number | null } | null
 	) => {
 		setTradeSubmitting(true);
+
+		if (tradeSide === 'sell') {
+			try {
+				showToast.loading(
+					`Submitting sell for ${amount} key${amount === 1 ? '' : 's'}...`
+				);
+
+				await tradeMutation.mutateAsync({
+					creatorId: id || '',
+					amount: -amount,
+					priceStroops: creator
+						? resolveCreatorKeyPriceStroops(creator)
+						: null,
+					price: creator?.price,
+					minPriceStroops: slippage?.minPriceStroops ?? null,
+				});
+
+				showToast.transactionSuccess(
+					'Trade confirmed',
+					`Sold ${formatNumber(amount)} key${
+						amount === 1 ? '' : 's'
+					} from ${creator?.title || 'Creator'}`
+				);
+
+				setBuyDialogOpen(false);
+			} catch (error) {
+				showToast.error(getSignatureErrorMessage(error));
+			} finally {
+				if (id) {
+					invalidateTradeCooldownStatus(queryClient, id);
+				}
+				setTradeSubmitting(false);
+			}
+			return;
+		}
 
 		try {
 			showToast.loading(
@@ -724,11 +774,46 @@ function CreatorDetailPageContent() {
 								cooldown={tradeCooldown}
 								label="Buy Key"
 								className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
-								onClick={() => setBuyDialogOpen(true)}
+								onClick={() => {
+								setTradeSide('buy');
+								setBuyDialogOpen(true);
+							}}
 								buttonProps={{
 									'data-testid': 'key-detail-buy-button',
 								}}
 							/>
+						)}
+
+						{holdingsCount > 0 && (
+							isFloorActive ? (
+								<UnavailableAction
+									disabled
+									reason="PriceFloorActive: Price floor is active. Selling is disabled while current price is at or below the floor price."
+								>
+									<Button
+										type="button"
+										disabled
+										data-testid="key-detail-sell-button"
+										variant="outline"
+										className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+									>
+										Sell Key
+									</Button>
+								</UnavailableAction>
+							) : (
+								<Button
+									type="button"
+									data-testid="key-detail-sell-button"
+									variant="outline"
+									className="min-h-11 w-full rounded-xl font-bold sm:h-10 sm:min-h-0 sm:w-auto"
+									onClick={() => {
+										setTradeSide('sell');
+										setBuyDialogOpen(true);
+									}}
+								>
+									Sell Key
+								</Button>
+							)
 						)}
 					</div>
 				</div>
@@ -868,6 +953,7 @@ function CreatorDetailPageContent() {
 								twapWindow={twapWindow}
 								onTwapWindowChange={setTwapWindow}
 								isTwapLoading={isTwapLoading}
+								priceFloorStroops={priceFloorStroops}
 								height={300}
 							/>
 						</div>
@@ -1011,7 +1097,7 @@ function CreatorDetailPageContent() {
 				{creator && (
 					<TradeDialog
 						open={buyDialogOpen}
-						side="buy"
+						side={tradeSide}
 						creatorName={creator.title || creator.name || 'Creator'}
 						availableHoldings={holdingsCount}
 						keyPriceStroops={resolveCreatorKeyPriceStroops(creator)}
@@ -1021,11 +1107,13 @@ function CreatorDetailPageContent() {
 						keyConfig={keyConfig}
 						isKeyConfigLoading={isKeyConfigLoading}
 						onOpenChange={setBuyDialogOpen}
-						onConfirm={handleConfirmBuy}
+						onConfirm={handleConfirmTrade}
 						isSubmitting={tradeSubmitting}
 						requireConfirmation={true}
 						tradingPaused={creator.tradingPaused}
 						keyFreeze={keyFreeze}
+						priceFloorStroops={priceFloorStroops}
+						priceFloorActive={isFloorActive}
 					/>
 				)}
 

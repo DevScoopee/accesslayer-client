@@ -77,6 +77,10 @@ export interface BuySellKeyFlowProps {
 	isSubmitting?: boolean;
 	/** True when an admin has paused trading for this specific key (#777). */
 	tradingPaused?: boolean;
+	/** Configured price floor in stroops (#1152). */
+	priceFloorStroops?: number | null;
+	/** Whether the price floor is active (spot <= floor) (#1152). */
+	priceFloorActive?: boolean;
 	className?: string;
 }
 
@@ -113,6 +117,8 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 	onError,
 	isSubmitting: externalIsSubmitting = false,
 	tradingPaused = false,
+	priceFloorStroops = null,
+	priceFloorActive,
 	className,
 }) => {
 	const effectiveHoldingCap = useMemo(
@@ -137,6 +143,14 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 	const { paused: globalPaused } = useGlobalPause();
 	// Trading is blocked by a platform-wide pause OR a pause on this key (#777).
 	const paused = globalPaused || tradingPaused;
+	// Price floor active (#1152) blocks sell trades when spot price <= floor price.
+	const isFloorActive =
+		priceFloorActive ??
+		(keyPriceStroops != null &&
+		priceFloorStroops != null &&
+		priceFloorStroops > 0
+			? keyPriceStroops <= priceFloorStroops
+			: false);
 
 	const isSubmitting = externalIsSubmitting || internalSubmitting;
 
@@ -154,6 +168,8 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 		if (parsedAmount <= 0) return 'Amount must be greater than zero.';
 		if (!Number.isInteger(parsedAmount))
 			return 'Amount must be a whole number.';
+		if (side === 'sell' && isFloorActive)
+			return 'PriceFloorActive: Selling is disabled while current price is at or below the floor price.';
 
 		if (
 			side === 'buy' &&
@@ -192,6 +208,7 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 		maxBuyQuantity,
 		availableHoldings,
 		effectiveHoldingCap,
+		isFloorActive,
 	]);
 
 	const isCapLimitReached = useMemo(
@@ -503,6 +520,22 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 				/>
 			)}
 
+			{/* Price floor active alert (#1152) */}
+			{side === 'sell' && isFloorActive && (
+				<div
+					role="alert"
+					data-testid="price-floor-alert"
+					className="flex items-start gap-2.5 rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-xs text-rose-200"
+				>
+					<div>
+						<p className="font-semibold text-rose-300">Price Floor Active</p>
+						<p className="mt-0.5 text-rose-200/80" data-testid="price-floor-message">
+							PriceFloorActive: Selling is disabled because current price is at or below the configured floor price{priceFloorStroops != null ? ` (${formatDisplayKeyPrice(priceFloorStroops)})` : ''}.
+						</p>
+					</div>
+				</div>
+			)}
+
 			{/* Amount Input with MAX Button */}
 			<div className="space-y-1.5">
 				<div className="flex items-center justify-between text-xs">
@@ -531,7 +564,7 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 							setAmountText(e.target.value);
 							setTouched(true);
 						}}
-						disabled={isSubmitting}
+						disabled={isSubmitting || (side === 'sell' && isFloorActive)}
 						placeholder="1"
 						className={cn(
 							'w-full rounded-xl border bg-white/[0.04] px-3 py-2.5 pr-16 text-sm font-mono text-white outline-none transition-colors',
@@ -545,7 +578,7 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 						data-testid="trade-max-button"
 						onClick={handleMaxClick}
 						disabled={
-							isSubmitting || (side === 'sell' && availableHoldings <= 0)
+							isSubmitting || (side === 'sell' && (availableHoldings <= 0 || isFloorActive))
 						}
 						className={cn(
 							'absolute right-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-2.5 py-1 text-xs font-bold text-amber-300 transition-colors',
@@ -649,7 +682,14 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 			)}
 
 			{/* Review / Proceed to Confirmation Button */}
-			<UnavailableAction disabled={paused} reason="Trading is currently paused">
+			<UnavailableAction
+				disabled={paused || (side === 'sell' && isFloorActive)}
+				reason={
+					side === 'sell' && isFloorActive
+						? 'PriceFloorActive: Selling is disabled while current price is at or below the floor price.'
+						: 'Trading is currently paused'
+				}
+			>
 				<Button
 					type="button"
 					onClick={handleReviewOrder}
@@ -657,7 +697,8 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 						!isValid ||
 						isSubmitting ||
 						(impactWarningActive && !impactAcknowledged) ||
-						paused
+						paused ||
+						(side === 'sell' && isFloorActive)
 					}
 					data-testid="trade-review-button"
 					className={cn(

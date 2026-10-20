@@ -233,6 +233,14 @@ export const routes = [
 				element: <AtomicSwapCreatePage />,
 			},
 			{
+				path: '/swap/pending',
+				element: <AtomicSwapCreatePage />,
+			},
+			{
+				path: '/swaps',
+				element: <AtomicSwapCreatePage />,
+			},
+			{
 				path: '/swap/:proposalId',
 				element: <AtomicSwapProposalPage />,
 			},

@@ -1162,11 +1162,13 @@ const TradeDialog: React.FC<TradeDialogProps> = ({
 
 				{amountValid && (
 					<div className="mt-3 border-t border-white/10 pt-3">
-						<SlippageToleranceSelector
-							value={slippageTolerancePercent}
-							onChange={setSlippageTolerancePercent}
-							disabled={isSubmitting}
-						/>
+						{!confirmationOpen && (
+							<SlippageToleranceSelector
+								value={slippageTolerancePercent}
+								onChange={setSlippageTolerancePercent}
+								disabled={isSubmitting}
+							/>
+						)}
 						{slippageBounds && (
 							<p
 								className="mt-2 text-[0.7rem] text-white/45"
@@ -1195,11 +1197,13 @@ const TradeDialog: React.FC<TradeDialogProps> = ({
 										)}
 							</p>
 						)}
-						<PriceImpactWarning
-							impactPercent={priceImpactPercent}
-							threshold={PRICE_IMPACT_THRESHOLD_PERCENT}
-							className="mt-2"
-						/>
+						{!confirmationOpen && (
+							<PriceImpactWarning
+								impactPercent={priceImpactPercent}
+								threshold={PRICE_IMPACT_THRESHOLD_PERCENT}
+								className="mt-2"
+							/>
+						)}
 					</div>
 				)}
 			</div>
@@ -1281,6 +1285,7 @@ const TradeDialog: React.FC<TradeDialogProps> = ({
 				feeError={feeRateError}
 				onFeeRetry={handleFeeRateRetry}
 				slippageTolerancePercent={slippageTolerancePercent}
+				onSlippageChange={setSlippageTolerancePercent}
 				maxPriceStroops={slippageBounds?.maxPriceStroops ?? null}
 				minPriceStroops={slippageBounds?.minPriceStroops ?? null}
 				priceImpactPercent={priceImpactPercent}

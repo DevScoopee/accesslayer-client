@@ -222,6 +222,29 @@ export interface TradeCooldownInfo {
 }
 
 /**
+ * Wallet-scoped lock-up status for a creator key (#1163).
+ *
+ * Returned by GET /keys/:keyId/lockup/:wallet. While a lock-up is in
+ * effect the holder cannot sell; unlockAt is the absolute timestamp at
+ * which selling becomes possible again.
+ */
+export interface KeyLockupInfo {
+	/** Key this lock-up status belongs to, when the backend echoes it back. */
+	keyId?: string;
+	/** Wallet the lock-up status was resolved for. */
+	wallet?: string;
+	/**
+	 * Absolute unlock timestamp (seconds epoch, milliseconds epoch, or ISO
+	 * string) after which selling is allowed again.
+	 */
+	unlockAt?: number | string | null;
+	/** Whether the backend currently considers the position locked. */
+	isLocked?: boolean;
+	/** Lock-up window length in seconds, when reported explicitly. */
+	lockupDurationSeconds?: number | null;
+}
+
+/**
  * Live trading configuration for a single creator key (#951).
  *
  * Returned by GET /keys/:keyId/config.
@@ -926,6 +949,28 @@ class CourseService extends BaseApiService {
 			if (error instanceof ApiError && error.status === 404) {
 				// No cooldown concept deployed for this key yet.
 				// Treat as no cooldown data so trade buttons stay enabled.
+				return null;
+			}
+
+			throw this.handleError(error);
+		}
+	}
+
+	// Get wallet lock-up status - GET /keys/:keyId/lockup/:wallet (#1163)
+	async getKeyLockup(
+		keyId: string,
+		wallet: string
+	): Promise<KeyLockupInfo | null> {
+		try {
+			const response = await this.api.get<APIResponse<KeyLockupInfo>>(
+				`/keys/${keyId}/lockup/${wallet}`
+			);
+
+			return response.data.data;
+		} catch (error: unknown) {
+			if (error instanceof ApiError && error.status === 404) {
+				// No lock-up record for this wallet — treat as unlocked so
+				// the sell button stays enabled.
 				return null;
 			}
 

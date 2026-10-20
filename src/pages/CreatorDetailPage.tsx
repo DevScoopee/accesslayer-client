@@ -85,6 +85,7 @@ import KeyDeprecationBanner from '@/components/common/KeyDeprecationBanner';
 import KeyTradingPausedBanner from '@/components/common/KeyTradingPausedBanner';
 import KeyFreezeStatusBanner from '@/components/common/KeyFreezeStatusBanner';
 import AddToBundleButton from '@/components/common/AddToBundleButton';
+import AddToBatchButton from '@/components/common/AddToBatchButton';
 import MergeProposalBanner from '@/components/common/MergeProposalBanner';
 import KeyBuybackModal from '@/components/common/KeyBuybackModal';
 import type { KeyBuybackReceipt } from '@/hooks/useKeyBuyback';
@@ -739,7 +740,18 @@ function CreatorDetailPageContent() {
 						)}
 					</div>
 
-					<div className="flex items-center gap-2">
+					<div className="flex flex-wrap items-center gap-2">
+						<AddToBatchButton
+							keyId={creator.id}
+							keyName={displayName}
+							priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
+							currentSupply={creator.creatorShareSupply ?? null}
+							thumbnail={displayAvatar ?? undefined}
+							disabled={Boolean(keyFreeze)}
+							disabledReason={keyFreeze?.reason}
+							className="min-h-11 w-full sm:h-10 sm:min-h-0 sm:w-auto"
+						/>
+
 						<AddToBundleButton
 							keyId={creator.id}
 							keyName={displayName}

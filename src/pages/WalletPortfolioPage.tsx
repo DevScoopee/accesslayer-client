@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { useAccount } from 'wagmi';
-import { BarChart3, Wallet } from 'lucide-react';
+import { BarChart3, Wallet, Layers } from 'lucide-react';
 import EmptyState from '@/components/common/EmptyState';
+import { Button } from '@/components/ui/button';
+import { useBatchTradeStore, selectBatchItemCount } from '@/hooks/useBatchTradeStore';
 import SectionErrorBoundary from '@/components/common/SectionErrorBoundary';
 import Skeleton from '@/components/ui/skeleton';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
@@ -82,6 +84,9 @@ export default function WalletPortfolioPage() {
 		useState<PortfolioTableSortDirection>(
 			defaultDirectionForSortKey('current_value')
 		);
+
+	const batchItemCount = useBatchTradeStore(selectBatchItemCount);
+	const openBatchDrawer = useBatchTradeStore(state => state.openDrawer);
 
 	const heldPositions = useMemo(
 		() =>
@@ -167,14 +172,34 @@ export default function WalletPortfolioPage() {
 			data-testid="wallet-portfolio-page"
 		>
 			<div className="mx-auto max-w-6xl space-y-6">
-				<div>
-					<h1 className="font-grotesque text-2xl font-black tracking-tight">
-						Portfolio
-					</h1>
-					<p className="mt-1 text-sm text-white/60">
-						Your creator-key holdings valued at the current bonding-curve
-						price.
-					</p>
+				<div className="flex flex-wrap items-center justify-between gap-4">
+					<div>
+						<h1 className="font-grotesque text-2xl font-black tracking-tight">
+							Portfolio
+						</h1>
+						<p className="mt-1 text-sm text-white/60">
+							Your creator-key holdings valued at the current bonding-curve
+							price.
+						</p>
+					</div>
+
+					<Button
+						variant="outline"
+						onClick={openBatchDrawer}
+						data-testid="portfolio-batch-trade-button"
+						className="gap-2 rounded-xl border-amber-400/30 bg-amber-400/10 font-bold text-amber-300 hover:bg-amber-400/20 hover:border-amber-400/50"
+					>
+						<Layers className="size-4" aria-hidden="true" />
+						Batch Trade
+						{batchItemCount > 0 && (
+							<span
+								className="rounded-full bg-amber-400 px-1.5 py-0.2 font-mono text-[0.68rem] font-bold text-slate-950"
+								data-testid="portfolio-batch-count"
+							>
+								{batchItemCount}
+							</span>
+						)}
+					</Button>
 				</div>
 
 				{/* Summary cards (#1116) */}

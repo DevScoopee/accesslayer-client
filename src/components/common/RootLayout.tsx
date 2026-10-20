@@ -3,6 +3,8 @@ import { Outlet } from 'react-router';
 import MobileBottomNav from '@/components/common/MobileBottomNav';
 import BundleCartTrigger from '@/components/common/BundleCartTrigger';
 import BundleCartDrawer from '@/components/common/BundleCartDrawer';
+import BatchTradeTrigger from '@/components/common/BatchTradeTrigger';
+import BatchTradeDrawer from '@/components/common/BatchTradeDrawer';
 
 /**
  * Root layout shared by all routes.
@@ -11,9 +13,9 @@ import BundleCartDrawer from '@/components/common/BundleCartDrawer';
  * MobileBottomNav globally so it is always available on mobile viewports
  * without each page having to include it individually.
  *
- * The bundle cart drawer (#1118) also lives here so the cart queued from
- * any key page stays reachable — and persists across navigation — for the
- * whole session.
+ * The bundle cart drawer (#1118) and batch trade drawer (#1155) also live
+ * here so items queued from any key page stay reachable — and persist
+ * across navigation — for the whole session.
  */
 export default function RootLayout() {
 	const [bundleCartOpen, setBundleCartOpen] = useState(false);
@@ -29,6 +31,9 @@ export default function RootLayout() {
 				open={bundleCartOpen}
 				onClose={() => setBundleCartOpen(false)}
 			/>
+			{/* Batch trade entry point + drawer, available on every route (#1155) */}
+			<BatchTradeTrigger />
+			<BatchTradeDrawer />
 		</>
 	);
 }

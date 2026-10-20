@@ -1,5 +1,5 @@
 import { Link } from 'react-router';
-import { ArrowRight, RefreshCw, Flame, Sparkles } from 'lucide-react';
+import { ArrowRight, RefreshCw, Flame, Sparkles, Layers } from 'lucide-react';
 import { useDocumentTitle } from '@/hooks/useDocumentTitle';
 import { useNavigationTiming } from '@/hooks/useNavigationTiming';
 import { useKeyDiscovery } from '@/hooks/useKeyDiscovery';
@@ -8,6 +8,8 @@ import { DiscoveryCardGridSkeleton } from '@/components/common/DiscoveryKeyCardS
 import EmptyState from '@/components/common/EmptyState';
 import MarketplaceSection from '@/components/common/MarketplaceSection';
 import SectionDivider from '@/components/common/SectionDivider';
+import { Button } from '@/components/ui/button';
+import { useBatchTradeStore, selectBatchItemCount } from '@/hooks/useBatchTradeStore';
 
 /**
  * Key Discovery Page (#937).
@@ -31,6 +33,9 @@ export default function DiscoveryPage() {
 		error,
 		refetch,
 	} = useKeyDiscovery({ pollIntervalMs: 60_000 });
+
+	const batchItemCount = useBatchTradeStore(selectBatchItemCount);
+	const openBatchDrawer = useBatchTradeStore(state => state.openDrawer);
 
 	const hasError = Boolean(error && trendingKeys.length === 0 && newListings.length === 0);
 
@@ -60,8 +65,8 @@ export default function DiscoveryPage() {
 						listings on Access Layer, updated live every 60 seconds without page reloads.
 					</p>
 
-					{/* 60s Live Auto-Refresh Status */}
-					<div className="flex justify-center">
+					{/* 60s Live Auto-Refresh Status & Batch Trade Trigger */}
+					<div className="flex flex-wrap items-center justify-center gap-3">
 						<span
 							role="status"
 							aria-live="polite"
@@ -82,6 +87,25 @@ export default function DiscoveryPage() {
 							)}
 							{isRefreshing ? 'Refreshing live data…' : 'Data refreshes every 60s'}
 						</span>
+
+						<Button
+							variant="outline"
+							size="xs"
+							onClick={openBatchDrawer}
+							data-testid="discovery-batch-trade-button"
+							className="h-7 rounded-full border-amber-400/30 bg-amber-400/10 px-3 text-[0.72rem] font-bold text-amber-300 hover:bg-amber-400/20 hover:border-amber-400/50"
+						>
+							<Layers className="mr-1.5 size-3.5" aria-hidden="true" />
+							Batch Trade
+							{batchItemCount > 0 && (
+								<span
+									className="ml-1.5 rounded-full bg-amber-400 px-1.5 py-0.2 font-mono text-[0.65rem] font-bold text-slate-950"
+									data-testid="discovery-batch-count"
+								>
+									{batchItemCount}
+								</span>
+							)}
+						</Button>
 					</div>
 				</MarketplaceSection>
 

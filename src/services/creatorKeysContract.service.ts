@@ -143,6 +143,53 @@ export class CreatorKeysContractService {
 	}): Promise<{ success: boolean; hash?: string }> {
 		return this.batch_transfer(args);
 	}
+
+	async set_whitelist_mode(args: {
+		creatorId: string;
+		enabled: boolean;
+	}): Promise<{ success: boolean; enabled: boolean }> {
+		void args;
+		return { success: true, enabled: args.enabled };
+	}
+
+	async setWhitelistMode(args: {
+		creatorId: string;
+		enabled: boolean;
+	}): Promise<{ success: boolean; enabled: boolean }> {
+		return this.set_whitelist_mode(args);
+	}
+
+	async add_to_whitelist(args: {
+		creatorId: string;
+		address?: string;
+		addresses?: string[];
+	}): Promise<{ success: boolean; addresses: string[] }> {
+		const list =
+			args.addresses ?? (args.address ? [args.address] : []);
+		return { success: true, addresses: list };
+	}
+
+	async addToWhitelist(args: {
+		creatorId: string;
+		address?: string;
+		addresses?: string[];
+	}): Promise<{ success: boolean; addresses: string[] }> {
+		return this.add_to_whitelist(args);
+	}
+
+	async remove_from_whitelist(args: {
+		creatorId: string;
+		address: string;
+	}): Promise<{ success: boolean; address: string }> {
+		return { success: true, address: args.address };
+	}
+
+	async removeFromWhitelist(args: {
+		creatorId: string;
+		address: string;
+	}): Promise<{ success: boolean; address: string }> {
+		return this.remove_from_whitelist(args);
+	}
 }
 
 export const creatorKeysContractService = new CreatorKeysContractService();

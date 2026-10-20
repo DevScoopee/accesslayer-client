@@ -692,20 +692,24 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 			)}
 
 			{/* Slippage Tolerance Selector (0.5%, 1%, 2%, custom) */}
-			<div className="border-t border-white/10 pt-3">
-				<SlippageToleranceSelector
-					value={slippageTolerancePercent}
-					onChange={setSlippageTolerancePercent}
-					disabled={isSubmitting}
-					presets={[0.5, 1, 2]}
-				/>
-			</div>
+			{!confirmationOpen && (
+				<div className="border-t border-white/10 pt-3">
+					<SlippageToleranceSelector
+						value={slippageTolerancePercent}
+						onChange={setSlippageTolerancePercent}
+						disabled={isSubmitting}
+						presets={[0.5, 1, 2]}
+					/>
+				</div>
+			)}
 
 			{/* Price impact warning when impact exceeds the selected tolerance */}
-			<PriceImpactWarning
-				impactPercent={priceImpactPercent}
-				threshold={slippageTolerancePercent}
-			/>
+			{!confirmationOpen && (
+				<PriceImpactWarning
+					impactPercent={priceImpactPercent}
+					threshold={slippageTolerancePercent}
+				/>
+			)}
 			{impactWarningActive && (
 				<PriceImpactOverrideCheckbox
 					checked={impactAcknowledged}
@@ -763,6 +767,7 @@ export const BuySellKeyFlow: React.FC<BuySellKeyFlowProps> = ({
 				unitPriceStroops={keyPriceStroops}
 				totalStroops={totalStroops}
 				slippageTolerancePercent={slippageTolerancePercent}
+				onSlippageChange={setSlippageTolerancePercent}
 				maxPriceStroops={slippageBounds?.maxPriceStroops ?? null}
 				minPriceStroops={slippageBounds?.minPriceStroops ?? null}
 				priceImpactPercent={priceImpactPercent}

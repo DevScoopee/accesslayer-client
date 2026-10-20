@@ -89,6 +89,7 @@ export default function CreatorDashboardPage() {
 		addAddresses: addWhitelistAddresses,
 		removeAddress: removeWhitelistAddress,
 		disableWhitelist,
+		setWhitelistMode,
 		isAdding: isAddingWhitelist,
 		isRemoving: isRemovingWhitelist,
 		isDisabling: isDisablingWhitelist,
@@ -452,24 +453,29 @@ export default function CreatorDashboardPage() {
 							/>
 						</section>
 
-						<section
-							className={CARD_CLASS}
-							data-testid="whitelist-section"
-						>
-							<WhitelistManagementPanel
-								creatorId={id}
-								isWhitelistEnabled={isWhitelistEnabled}
-								whitelist={whitelistEntries}
-								onAddAddresses={addWhitelistAddresses}
-								onRemoveAddress={removeWhitelistAddress}
-								onDisableWhitelist={disableWhitelist}
-								isSubmitting={
-									isAddingWhitelist ||
-									isRemovingWhitelist ||
-									isDisablingWhitelist
-								}
-							/>
-						</section>
+						{isKeyCreator && (
+							<section
+								className={CARD_CLASS}
+								data-testid="whitelist-section"
+							>
+								<WhitelistManagementPanel
+									creatorId={id}
+									ownerAddress={creator.instructorId}
+									connectedAddress={address}
+									isWhitelistEnabled={isWhitelistEnabled}
+									whitelist={whitelistEntries}
+									onAddAddresses={addWhitelistAddresses}
+									onRemoveAddress={removeWhitelistAddress}
+									onDisableWhitelist={disableWhitelist}
+									onSetWhitelistMode={setWhitelistMode}
+									isSubmitting={
+										isAddingWhitelist ||
+										isRemovingWhitelist ||
+										isDisablingWhitelist
+									}
+								/>
+							</section>
+						)}
 
 						<section
 							className={CARD_CLASS}

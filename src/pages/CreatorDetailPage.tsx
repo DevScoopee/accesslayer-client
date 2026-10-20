@@ -22,6 +22,8 @@ import AnnouncementFeed from '@/components/common/AnnouncementFeed';
 import SecondaryMarketSellPanel from '@/components/common/SecondaryMarketSellPanel';
 import ActiveAuctionCard from '@/components/common/ActiveAuctionCard';
 import RoyaltyEarningsCard from '@/components/creator/RoyaltyEarningsCard';
+import TipCreatorPanel from '@/components/common/TipCreatorPanel';
+import RecentTipsFeed from '@/components/common/RecentTipsFeed';
 import CreatorProfileStaleIndicator from '@/components/common/CreatorProfileStaleIndicator';
 import CreatorProfileStatRow from '@/components/common/CreatorProfileStatRow';
 import BondingCurveChart from '@/components/common/BondingCurveChart';
@@ -1207,6 +1209,22 @@ function CreatorDetailPageContent() {
 				<div className="mt-8">
 					<SectionErrorBoundary sectionName="royalty earnings">
 						<RoyaltyEarningsCard keyId={creator.id} />
+					</SectionErrorBoundary>
+				</div>
+
+				{/* Tipping Panel & Public Tip Feed */}
+				<div className="mt-8 space-y-6">
+					<SectionErrorBoundary sectionName="creator tipping">
+						<TipCreatorPanel
+							creatorId={creator.id}
+							creatorName={displayName}
+							isHolder={holdingsCount > 0}
+							userAddress={userAddress}
+						/>
+						<RecentTipsFeed
+							creatorId={creator.id}
+							className="mt-6"
+						/>
 					</SectionErrorBoundary>
 				</div>
 

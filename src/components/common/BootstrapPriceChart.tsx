@@ -53,8 +53,6 @@ export function BootstrapPriceChart({
 		padding.top + innerHeight - ((price - endPrice) / priceRange) * innerHeight;
 	const xForProgress = (p: number) => padding.left + p * innerWidth;
 
-	const lineStart = `${xForProgress(0)},${yForPrice(startPrice)}`;
-	const lineEnd = `${xForProgress(1)},${yForPrice(endPrice)}`;
 	const currentX = xForProgress(progress);
 	const currentY = yForPrice(displayPrice);
 

@@ -1,5 +1,5 @@
-import { useState, useMemo } from 'react';
-import { Scissors, Clock, X, CheckCircle, AlertTriangle } from 'lucide-react';
+import { useState, useMemo, useEffect } from 'react';
+import { Scissors, Clock, X, CheckCircle } from 'lucide-react';
 
 interface KeySplitPanelProps {
 	currentSupply: number;

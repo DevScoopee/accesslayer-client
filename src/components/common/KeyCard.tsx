@@ -5,7 +5,11 @@ import CreatorInitialsAvatar from '@/components/common/CreatorInitialsAvatar';
 import Change24hBadge from '@/components/common/Change24hBadge';
 import { normalizeCreatorDisplayName } from '@/utils/creatorDisplayName.utils';
 import { formatCreatorHandle } from '@/utils/handleDisplay.utils';
-import { formatCreatorKeyPriceDisplay } from '@/utils/keyPriceDisplay.utils';
+import {
+	formatCreatorKeyPriceDisplay,
+	resolveCreatorKeyPriceStroops,
+} from '@/utils/keyPriceDisplay.utils';
+import AddToBatchButton from '@/components/common/AddToBatchButton';
 import { cn } from '@/lib/utils';
 
 export interface KeyCardProps {
@@ -103,6 +107,17 @@ export const KeyCard: React.FC<KeyCardProps> = ({ creator, className }) => {
 						{creator.category}
 					</span>
 				)}
+			</div>
+
+			<div className="relative z-20 mt-3 pt-3 border-t border-white/10">
+				<AddToBatchButton
+					keyId={creator.id}
+					keyName={displayName}
+					priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
+					currentSupply={creator.creatorShareSupply ?? null}
+					thumbnail={avatarSrc}
+					className="w-full justify-between"
+				/>
 			</div>
 		</article>
 	);

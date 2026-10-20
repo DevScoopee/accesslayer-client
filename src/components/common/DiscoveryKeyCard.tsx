@@ -4,6 +4,7 @@ import type { Course } from '@/services/course.service';
 import CreatorInitialsAvatar from '@/components/common/CreatorInitialsAvatar';
 import Change24hBadge from '@/components/common/Change24hBadge';
 import AddToBundleButton from '@/components/common/AddToBundleButton';
+import AddToBatchButton from '@/components/common/AddToBatchButton';
 import { normalizeCreatorDisplayName } from '@/utils/creatorDisplayName.utils';
 import { formatCreatorHandle } from '@/utils/handleDisplay.utils';
 import {
@@ -123,6 +124,14 @@ export const DiscoveryKeyCard: React.FC<DiscoveryKeyCardProps> = ({
 						</span>
 					</div>
 					{/* Raised above the full-card link overlay so it stays clickable. */}
+					<AddToBatchButton
+						keyId={creator.id}
+						keyName={displayName}
+						priceStroops={resolveCreatorKeyPriceStroops(creator) ?? 0}
+						currentSupply={creator.creatorShareSupply ?? null}
+						thumbnail={avatarSrc}
+						className="relative z-20 shrink-0"
+					/>
 					<AddToBundleButton
 						keyId={creator.id}
 						keyName={displayName}

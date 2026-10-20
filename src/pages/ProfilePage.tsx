@@ -21,6 +21,7 @@ import ProtocolRevenueClaim from '@/components/common/ProtocolRevenueClaim';
 import ProtocolRevenueDistributionTable from '@/components/common/ProtocolRevenueDistributionTable';
 import WalletActivityFeed from '@/components/common/WalletActivityFeed';
 import SectionErrorBoundary from '@/components/common/SectionErrorBoundary';
+import WalletBadgeShowcase from '@/components/common/WalletBadgeShowcase';
 import TruncatedAddress from '@/components/common/TruncatedAddress';
 import { ProfileTabPillGroup } from '@/components/common/ProfileTabPill';
 import ActivePriceAlertsList from '@/components/common/ActivePriceAlertsList';
@@ -287,6 +288,10 @@ export default function ProfilePage() {
 					onShareProfile={handleShareProfile}
 					isShareCopied={isShareCopied}
 				/>
+
+				<SectionErrorBoundary sectionName="badges">
+					<WalletBadgeShowcase wallet={profileWallet} />
+				</SectionErrorBoundary>
 
 				{/* Tab navigation */}
 				<ProfileTabPillGroup

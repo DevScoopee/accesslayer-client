@@ -12,13 +12,25 @@ import { useKeyCostBasis } from '@/hooks/useKeyCostBasis';
 import showToast from '@/utils/toast.util';
 import { getSignatureErrorMessage } from '@/utils/errorHandling.utils';
 import { fetchWalletActivityPage } from '@/services/walletActivity.service';
-import { fetchWalletHoldings } from '@/services/wallet.service';
+import {
+	fetchWalletBadges,
+	fetchWalletHoldings,
+} from '@/services/wallet.service';
+import type { WalletBadge } from '@/utils/walletBadges.utils';
 import { fetchTradeHistoryPage } from '@/services/tradeHistory.service';
 
 export function useWalletHoldings(address: string) {
 	return useQuery<HeldKeyPosition[]>({
 		queryKey: queryKeys.wallet.holdings(address),
 		queryFn: () => fetchWalletHoldings(address),
+		enabled: !!address,
+	});
+}
+
+export function useWalletBadges(address: string) {
+	return useQuery<WalletBadge[]>({
+		queryKey: queryKeys.wallet.badges(address),
+		queryFn: () => fetchWalletBadges(address),
 		enabled: !!address,
 	});
 }
